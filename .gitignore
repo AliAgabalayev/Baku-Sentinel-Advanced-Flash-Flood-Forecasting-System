@@ -216,3 +216,4 @@ logs/
 
 # Jupyter checkpoint files
 .ipynb_checkpoints/
+/data/
