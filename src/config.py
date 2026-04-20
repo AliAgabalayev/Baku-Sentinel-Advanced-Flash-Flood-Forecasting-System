@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -11,30 +10,25 @@ REPORTS_DIR  = ROOT_DIR / "reports"
 # ── API endpoints ─────────────────────────────────────────────────────────────
 HISTORICAL_URL = "https://archive-api.open-meteo.com/v1/archive"
 FORECAST_URL   = "https://api.open-meteo.com/v1/forecast"
+FLOOD_URL      = "https://flood-api.open-meteo.com/v1/flood"
 
-# ── Cities ────────────────────────────────────────────────────────────────────
-CITIES: list[dict] = [
-    {"name": "Baku",      "latitude": 40.41, "longitude": 49.87, "country": "AZ"},
-    {"name": "Lenkaran",  "latitude": 38.75, "longitude": 48.85, "country": "AZ"},
-    {"name": "Ismayilli", "latitude": 40.79, "longitude": 48.15, "country": "AZ"},
+# ── Baku Zones ────────────────────────────────────────────────────────────────
+BAKU_ZONES: list[dict] = [
+    {"zone": "Coastal",    "latitude": 40.37, "longitude": 49.85},
+    {"zone": "Urban",      "latitude": 40.40, "longitude": 49.88},
+    {"zone": "Highland",   "latitude": 40.45, "longitude": 49.75},
 ]
 
 # ── Date range ────────────────────────────────────────────────────────────────
-HISTORICAL_START = "2019-01-01"
-HISTORICAL_END   = "2024-12-31"
+HISTORICAL_START = "2020-01-01"
+HISTORICAL_END   = "2026-04-27"
 
-# ── Variables ─────────────────────────────────────────────────────────────────
-DAILY_VARIABLES: list[str] = [
-    "temperature_2m_max",
-    "temperature_2m_min",
-    "temperature_2m_mean",
-    "apparent_temperature_max",
-    "precipitation_sum",
-    "rain_sum",
-    "snowfall_sum",
-    "windspeed_10m_max",
-    "relative_humidity_2m_mean",
-    "weathercode",
+# ── Features ──────────────────────────────────────────────────────────────────
+# Validated daily variables for Open-Meteo Archive API
+FEATURES: list[str] = [
+    "temperature_2m_max", "temperature_2m_min", "temperature_2m_mean",
+    "precipitation_sum", "relative_humidity_2m_mean",
+    "wind_speed_10m_max", "et0_fao_evapotranspiration"
 ]
 
 # ── Quality gates ─────────────────────────────────────────────────────────────
