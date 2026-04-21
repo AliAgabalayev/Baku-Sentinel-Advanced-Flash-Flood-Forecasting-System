@@ -21,15 +21,27 @@ BAKU_ZONES: list[dict] = [
 
 # ── Date range ────────────────────────────────────────────────────────────────
 HISTORICAL_START = "2020-01-01"
-HISTORICAL_END   = "2026-04-27"
+HISTORICAL_END   = "2026-04-20"  # Today is April 21, so 20th is the last full day
 
 # ── Features ──────────────────────────────────────────────────────────────────
 # Validated daily variables for Open-Meteo Archive API
 FEATURES: list[str] = [
-    "temperature_2m_max", "temperature_2m_min", "temperature_2m_mean",
-    "precipitation_sum", "relative_humidity_2m_mean",
-    "wind_speed_10m_max", "et0_fao_evapotranspiration"
+    "temperature_2m_max", 
+    "temperature_2m_min", 
+    "temperature_2m_mean",
+    "precipitation_sum", 
+    "relative_humidity_2m_mean",
+    "wind_speed_10m_max", 
+    "et0_fao_evapotranspiration",
+    "snowfall_sum",
+    "soil_moisture_0_to_7cm_mean",
+    "soil_moisture_7_to_28cm_mean",
+    "soil_temperature_0_to_7cm_mean"
 ]
+
+# ── Ingestion Logic ───────────────────────────────────────────────────────────
+MAX_RETRIES     = 3
+BACKOFF_FACTOR  = 2
 
 # ── Quality gates ─────────────────────────────────────────────────────────────
 MAX_MISSING_PCT = 5.0
