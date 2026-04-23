@@ -14,9 +14,9 @@ FLOOD_URL      = "https://flood-api.open-meteo.com/v1/flood"
 
 # ── Baku Zones ────────────────────────────────────────────────────────────────
 BAKU_ZONES: list[dict] = [
-    {"zone": "Coastal",    "latitude": 40.37, "longitude": 49.85},
-    {"zone": "Urban",      "latitude": 40.40, "longitude": 49.88},
-    {"zone": "Highland",   "latitude": 40.45, "longitude": 49.75},
+    {"zone": "High Relief",     "latitude": 40.34376, "longitude": 49.55835},
+    {"zone": "Low Relief",      "latitude": 40.29215, "longitude": 49.83208},
+    {"zone": "Moderate Relief", "latitude": 40.35038, "longitude": 49.65975},
 ]
 
 # ── Date range ────────────────────────────────────────────────────────────────
