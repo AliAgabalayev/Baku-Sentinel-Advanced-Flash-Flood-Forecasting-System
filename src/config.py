@@ -3,6 +3,7 @@ from pathlib import Path
 # ── Paths ─────────────────────────────────────────────────────────────────────
 ROOT_DIR     = Path(__file__).resolve().parents[1]
 DATA_RAW_DIR = ROOT_DIR / "data" / "raw"
+DATA_PROCESSED_DIR = ROOT_DIR / "data" / "processed"
 DB_PATH      = ROOT_DIR / "data" / "weather.duckdb"
 LOGS_DIR     = ROOT_DIR / "logs"
 REPORTS_DIR  = ROOT_DIR / "reports"
@@ -21,29 +22,32 @@ BAKU_ZONES: list[dict] = [
 
 # ── Date range ────────────────────────────────────────────────────────────────
 HISTORICAL_START = "2020-01-01"
-HISTORICAL_END   = "2026-04-20"  # Today is April 21, so 20th is the last full day
+HISTORICAL_END   = "2026-04-20"
 
-# ── Features ──────────────────────────────────────────────────────────────────
-# Validated daily variables for Open-Meteo Archive API
-FEATURES: list[str] = [
-    "temperature_2m_max", 
-    "temperature_2m_min", 
-    "temperature_2m_mean",
-    "precipitation_sum", 
-    "relative_humidity_2m_mean",
-    "wind_speed_10m_max", 
-    "et0_fao_evapotranspiration",
-    "snowfall_sum",
-    "soil_moisture_0_to_7cm_mean",
-    "soil_moisture_7_to_28cm_mean",
-    "soil_temperature_0_to_7cm_mean"
+# ── Features (Hourly Grain) ───────────────────────────────────────────────────
+# Validated hourly variables for Open-Meteo Archive API
+HOURLY_FEATURES: list[str] = [
+    "temperature_2m",
+    "relative_humidity_2m",
+    "precipitation",
+    "wind_speed_10m",
+    "soil_moisture_0_to_7cm",
+    "soil_moisture_7_to_28cm",
+    "soil_temperature_0_to_7cm",
+    "et0_fao_evapotranspiration"
 ]
 
 # ── Ingestion Logic ───────────────────────────────────────────────────────────
 MAX_RETRIES     = 3
 BACKOFF_FACTOR  = 2
 
+# ── Medallion Layers ─────────────────────────────────────────────────────────
+SCHEMA_BRONZE = "bronze"
+SCHEMA_SILVER = "silver"
+SCHEMA_GOLD   = "gold"
+
 # ── Quality gates ─────────────────────────────────────────────────────────────
+FLOOD_THRESHOLD = 1.0  # m3/s
 MAX_MISSING_PCT = 5.0
 TEMP_RANGE      = (-50.0, 60.0)
 PRECIP_MAX      = 500.0
