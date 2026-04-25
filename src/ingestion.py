@@ -1,147 +1,213 @@
-import os
-import time
-import random
-import requests
-import pandas as pd
+"""
+ingestion.py — Baku Sentinel
+============================
+Fetches hourly weather + daily flood data from Open-Meteo APIs.
+Writes raw data into the Bronze DuckDB schema.
+
+Bronze tables:
+  bronze.weather_raw_{zone_slug}   — hourly weather
+  bronze.flood_raw_{zone_slug}     — daily river discharge
+"""
+
 import logging
+import random
+import time
+from typing import Optional
+
 import duckdb
-from datetime import datetime
+import pandas as pd
+import requests
+
 from src import config
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
-def _make_request(url, params):
+# ══════════════════════════════════════════════════════════════════════════════
+# HTTP helper
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _make_request(url: str, params: dict) -> dict:
     for attempt in range(config.MAX_RETRIES):
-        response = None
+        resp = None
         try:
-            response = requests.get(url, params=params, timeout=15)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            if response is not None and response.status_code == 400:
-                logger.error(f"Bad Request: {response.text}")
+            resp = requests.get(url, params=params, timeout=20)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.exceptions.RequestException as exc:
+            if resp is not None and resp.status_code == 400:
+                logger.error(f"Bad request (400): {resp.text}")
+                raise
             if attempt == config.MAX_RETRIES - 1:
-                logger.error(f"Request failed after {config.MAX_RETRIES} attempts: {e}")
-                raise e
+                logger.error(f"Failed after {config.MAX_RETRIES} attempts: {exc}")
+                raise
+            wait = (config.BACKOFF_FACTOR ** attempt) + random.uniform(0, 1)
+            logger.warning(f"Attempt {attempt + 1} failed — retrying in {wait:.1f}s")
+            time.sleep(wait)
+    return {}
 
-            wait_time = (config.BACKOFF_FACTOR ** attempt) + random.uniform(0, 1)
-            logger.warning(f"Attempt {attempt + 1} failed. Retrying in {wait_time:.2f}s...")
-            time.sleep(wait_time)
-    return None
 
+# ══════════════════════════════════════════════════════════════════════════════
+# Fetch helpers — return DataFrames
+# ══════════════════════════════════════════════════════════════════════════════
 
-def fetch_weather_hourly(zone_name, latitude, longitude, start_date, end_date):
-    logger.info(f"Fetching hourly weather for {zone_name} ({start_date} to {end_date})")
-
+def fetch_weather_historical(zone: str, lat: float, lon: float,
+                             start: str, end: str) -> pd.DataFrame:
+    """Fetch hourly historical weather from Open-Meteo Archive API."""
+    logger.info(f"[Historical] {zone}  {start} → {end}")
     params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "start_date": start_date,
-        "end_date": end_date,
-        "hourly": ",".join(config.HOURLY_FEATURES),
-        "timezone": "auto"
+        "latitude":  lat,
+        "longitude": lon,
+        "start_date": start,
+        "end_date":   end,
+        "hourly":    ",".join(config.HOURLY_VARIABLES),
+        "timezone":  "auto",
     }
-
     data = _make_request(config.HISTORICAL_URL, params)
-
     if "hourly" not in data:
-        raise ValueError(f"Malformed response from Archive API for {zone_name}")
-
+        raise ValueError(f"Malformed archive response for {zone}: {data}")
     df = pd.DataFrame(data["hourly"])
     df["time"] = pd.to_datetime(df["time"])
-    df["zone"] = zone_name
+    df["zone"] = zone
     return df
 
 
-def fetch_flood_hourly(zone_name, latitude, longitude, start_date, end_date):
-    logger.info(f"Fetching flood data for {zone_name} ({start_date} to {end_date})")
-
+def fetch_weather_forecast(zone: str, lat: float, lon: float,
+                           forecast_days: int = 15) -> pd.DataFrame:
+    """Fetch hourly forecast from Open-Meteo Forecast API (up to 15 days)."""
+    logger.info(f"[Forecast] {zone}  {forecast_days}d")
     params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "start_date": start_date,
-        "end_date": end_date,
-        "daily": "river_discharge",
-        "timezone": "auto"
+        "latitude":      lat,
+        "longitude":     lon,
+        "hourly":        ",".join(config.HOURLY_VARIABLES),
+        "timezone":      "auto",
+        "forecast_days": forecast_days,
     }
+    data = _make_request(config.FORECAST_URL, params)
+    if "hourly" not in data:
+        raise ValueError(f"Malformed forecast response for {zone}: {data}")
+    df = pd.DataFrame(data["hourly"])
+    df["time"] = pd.to_datetime(df["time"])
+    df["zone"] = zone
+    return df
 
+
+def fetch_flood_historical(zone: str, lat: float, lon: float,
+                           start: str, end: str) -> pd.DataFrame:
+    """Fetch daily river discharge from Open-Meteo Flood API."""
+    logger.info(f"[Flood] {zone}  {start} → {end}")
+    params = {
+        "latitude":   lat,
+        "longitude":  lon,
+        "start_date": start,
+        "end_date":   end,
+        "daily":      config.FLOOD_VARIABLE,
+        "timezone":   "auto",
+    }
     data = _make_request(config.FLOOD_URL, params)
-
     if "daily" not in data:
-        logger.warning(f"No flood data returned for {zone_name}")
+        logger.warning(f"No flood data for {zone} at ({lat}, {lon})")
         return pd.DataFrame()
-
     df = pd.DataFrame(data["daily"])
     df["time"] = pd.to_datetime(df["time"])
-    df["zone"] = zone_name
+    df["zone"] = zone
     return df
 
 
-def fetch_weather_forecast(zone_name, latitude, longitude, forecast_days=15):
-    logger.info(f"Fetching {forecast_days}-day forecast for {zone_name}")
+# ══════════════════════════════════════════════════════════════════════════════
+# Bronze layer writers
+# ══════════════════════════════════════════════════════════════════════════════
 
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "hourly": ",".join(config.HOURLY_FEATURES),
-        "forecast_days": forecast_days,
-        "timezone": "auto"
-    }
-
-    data = _make_request(config.FORECAST_URL, params)
-
-    if "hourly" not in data:
-        raise ValueError(f"Malformed response from Forecast API for {zone_name}")
-
-    df = pd.DataFrame(data["hourly"])
-    df["time"] = pd.to_datetime(df["time"])
-    df["zone"] = zone_name
-    return df
+def _zone_slug(zone_name: str) -> str:
+    return zone_name.lower().replace(" ", "_")
 
 
-def ingest_to_bronze(df, table_name, mode='overwrite'):
-    if df.empty:
-        return
+def write_bronze(conn: duckdb.DuckDBPyConnection,
+                 df: pd.DataFrame,
+                 table_name: str) -> None:
+    """Upsert a DataFrame into a Bronze DuckDB table."""
+    tmp = f"_tmp_{table_name}"
+    conn.execute(f"CREATE OR REPLACE TEMP TABLE {tmp} AS SELECT * FROM df")
+    conn.execute(f"""
+        CREATE TABLE IF NOT EXISTS {config.SCHEMA_BRONZE}.{table_name}
+        AS SELECT * FROM {tmp} WHERE 1=0
+    """)
+    conn.execute(f"""
+        INSERT INTO {config.SCHEMA_BRONZE}.{table_name}
+        SELECT src.* FROM {tmp} src
+        WHERE NOT EXISTS (
+            SELECT 1 FROM {config.SCHEMA_BRONZE}.{table_name} dst
+            WHERE dst.time = src.time AND dst.zone = src.zone
+        )
+    """)
+    n = conn.execute(f"SELECT count(*) FROM {config.SCHEMA_BRONZE}.{table_name}").fetchone()[0]
+    logger.info(f"Bronze {config.SCHEMA_BRONZE}.{table_name}: {n} total rows")
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Full historical ingest (run once / periodically)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def run_historical_ingest(
+    start: str = config.HISTORICAL_START,
+    end:   str = config.HISTORICAL_END,
+) -> None:
+    """
+    Fetch all historical weather + flood data for every zone,
+    write to Bronze schema in DuckDB.
+    """
     conn = duckdb.connect(str(config.DB_PATH))
     try:
         conn.execute(f"CREATE SCHEMA IF NOT EXISTS {config.SCHEMA_BRONZE}")
+        for zone_cfg in config.BAKU_ZONES:
+            zone = zone_cfg["zone"]
+            lat  = zone_cfg["latitude"]
+            lon  = zone_cfg["longitude"]
+            slug = _zone_slug(zone)
 
-        df["_ingested_at"] = datetime.now()
-        df["_source_system"] = "open-meteo"
+            # Weather
+            try:
+                df_w = fetch_weather_historical(zone, lat, lon, start, end)
+                write_bronze(conn, df_w, f"weather_raw_{slug}")
+            except Exception as e:
+                logger.error(f"Weather ingest failed for {zone}: {e}")
 
-        normalized_table = table_name.lower().replace(' ', '_')
-        target_full_path = f"{config.SCHEMA_BRONZE}.{normalized_table}"
+            # Flood
+            try:
+                df_f = fetch_flood_historical(zone, lat, lon, start, end)
+                if not df_f.empty:
+                    write_bronze(conn, df_f, f"flood_raw_{slug}")
+            except Exception as e:
+                logger.error(f"Flood ingest failed for {zone}: {e}")
 
-        if mode == 'overwrite':
-            conn.execute(f"CREATE OR REPLACE TABLE {target_full_path} AS SELECT * FROM df")
-        else:
-            conn.execute(f"CREATE TABLE IF NOT EXISTS {target_full_path} AS SELECT * FROM df WHERE 1=0")
-            conn.execute(f"""
-                INSERT INTO {target_full_path}
-                SELECT * FROM df src
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM {target_full_path} dest
-                    WHERE dest.time = src.time AND dest.zone = src.zone
-                )
-            """)
-
-        count = conn.execute(f"SELECT COUNT(*) FROM {target_full_path}").fetchone()[0]
-        logger.info(f"Table {target_full_path} now has {count} total rows.")
     finally:
         conn.close()
+    logger.info("Historical ingest complete.")
 
 
-def run_full_ingestion():
-    for zone in config.BAKU_ZONES:
-        name = zone["zone"]
-        lat = zone["latitude"]
-        lon = zone["longitude"]
+# ══════════════════════════════════════════════════════════════════════════════
+# Live forecast fetch (used by forecast pipeline)
+# ══════════════════════════════════════════════════════════════════════════════
 
-        weather_df = fetch_weather_hourly(name, lat, lon, config.HISTORICAL_START, config.HISTORICAL_END)
-        ingest_to_bronze(weather_df, f"weather_raw_{name}")
-
-        flood_df = fetch_flood_hourly(name, lat, lon, config.HISTORICAL_START, config.HISTORICAL_END)
-        ingest_to_bronze(flood_df, f"flood_raw_{name}")
+def fetch_all_forecast(forecast_days: int = config.FORECAST_DAYS) -> pd.DataFrame:
+    """
+    Fetch live forecast for all zones, return a combined DataFrame.
+    Does NOT write to Bronze (forecast data flows directly into Silver stream).
+    """
+    frames = []
+    for zone_cfg in config.BAKU_ZONES:
+        try:
+            df = fetch_weather_forecast(
+                zone_cfg["zone"],
+                zone_cfg["latitude"],
+                zone_cfg["longitude"],
+                forecast_days=forecast_days,
+            )
+            frames.append(df)
+        except Exception as e:
+            logger.error(f"Forecast fetch failed for {zone_cfg['zone']}: {e}")
+    if not frames:
+        raise RuntimeError("All forecast fetches failed.")
+    combined = pd.concat(frames, ignore_index=True)
+    logger.info(f"Forecast fetch complete: {len(combined)} hourly rows across {combined['zone'].nunique()} zones.")
+    return combined
