@@ -1,5 +1,100 @@
 # Baku Sentinel: Advanced Flash Flood Forecasting System
 
+## Team
+
+| Name | Role                      |
+|------|---------------------------|
+| Ali Agabalazade | Lead ML / Data Engineer   |
+| Nigar Rustamova | Data Analyst / Geospatial |
+| Nəzrin Məmmədzadə | Project / Documentation   |
+| İsgəndər Panahov (panahoff) | Presentator/Documentation |
+
+---
+
+## Task Breakdown
+
+### Data & Research
+- Dataset Discovery for Flood Detection  
+- Labeling Strategy Design  
+- Baseline Features & Open-Meteo Integration  
+
+### Engineering
+- Create ingestion pipeline  
+- Mermaid pipeline visualization  
+- Repository structure setup  
+- Telegram + Oxu.az flood scraper  
+
+### Feature Engineering
+- Separation of Baku into 3 zones  
+- Feature Engineering (lags, rolling, soil, etc.)
+
+### Documentation & Delivery
+- Project Plan README Creation  
+- Finalize Day 1 Deliverables  
+- Finalize Day 2 Deliverables  
+
+---
+
+## Task Ownership Matrix
+
+| Task                                       | Owner         | Status |
+|--------------------------------------------|---------------|--------|
+| Labeling Strategy Design                   | Team          | Done |
+| Baseline Features & Open-Meteo Integration | Ali + Panahov | Done |
+| Dataset Discovery                          | Nigar         | Done |
+| Flood News Scraper                         | Ali           | Done |
+| README Creation                            | Nəzrin        | Done |
+| Repo Structure                             | Ali           | Done |
+| Ingestion Pipeline                         | Ali           | Done |
+| Pipeline Diagram (Mermaid)                 | Panahov       | Done |
+| Zone Separation (3 zones)                  | Nigar         | Done |
+| Feature Engineering                        | All           | Done |
+| Day 1 Deliverables                         | Team          | Done |
+| Day 2 Deliverables                         | Nəzrin        | Done |
+| Increase Model Precision                   | Ali/Rustemova | In Progress |
+| Feature Engieering for second model        | Nazrin        | In Progress |
+| UI for Demo (HTML/CSS/JS)                  | Panahov       | In Progress |
+
+---
+
+## Daily Progress
+
+### Day 1 — April 18
+- Labeling strategy defined  
+- Dataset discovery completed  
+- Open-Meteo feature selection  
+- Flood news scraper built  
+
+### Day 2 — April 19
+- README and project documentation created  
+- Baseline features finalized  
+
+### Day 3 — April 20
+- Repository structure created  
+- Day 1 deliverables finalized  
+
+### Day 4 — April 21
+- Ingestion pipeline implemented  
+- Mermaid architecture diagram created  
+- Baku divided into 3 risk zones  
+- Day 2 deliverables finalized  
+
+### Ongoing
+- Feature engineering for weather prediction
+- Increasing precision of the model  
+- Creating UI for presentation demo (HTML, CSS, JavaScript)
+
+---
+
+## Progress Summary
+
+- Research: Complete  
+- Data Engineering: Complete  
+- Feature Engineering: Complete  
+- Documentation: Complete  
+- Modeling: In Progress  
+
+---
 
 ```mermaid
 graph TD
