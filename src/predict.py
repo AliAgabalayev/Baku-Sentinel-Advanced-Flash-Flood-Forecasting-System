@@ -17,8 +17,8 @@ import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier
 
-from pipeline.feature_engineering import build_features
-from pipeline.model import load_model, predict
+from src.feature_engineering import build_features
+from src.model import load_model, predict
 
 logger = logging.getLogger(__name__)
 
