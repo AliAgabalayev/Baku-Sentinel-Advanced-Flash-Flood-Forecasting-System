@@ -67,15 +67,15 @@ GOLD_FEATURE_COLS = [
     "wind_speed_10m", "soil_moisture_0_to_7cm", "soil_moisture_7_to_28cm",
     "soil_temperature_0_to_7cm", "et0_fao_evapotranspiration",
     "precip_lag_6h", "precip_lag_12h", "precip_lag_24h", "precip_lag_48h",
-    "discharge_lag_6h", "discharge_lag_24h", "temp_lag_24h",
+    "temp_lag_24h",
     "precip_roll_sum_24h", "precip_roll_sum_48h", "precip_roll_sum_72h",
-    "precip_roll_max_24h", "discharge_roll_max_24h", "humidity_roll_max_24h",
+    "precip_roll_max_24h", "humidity_roll_max_24h",
     "et0_roll_sum_24h",
     "api_7d", "soil_saturation_index",
     "soil_moisture_change_6h", "soil_moisture_deficit", "frozen_ground_flag",
-    "discharge_trend_6h", "temp_trend_24h",
+    "temp_trend_24h",
     "et_deficit_6h", "et_deficit_24h", "humidity_precip_product",
-    "highland_precip_24h", "highland_discharge_6h", "zone_cascade_risk",
+    "highland_precip_24h", "zone_cascade_risk",
     "hour_sin", "hour_cos", "doy_sin", "doy_cos", "is_winter",
     "zone_Low Relief", "zone_Moderate Relief",
 ]
@@ -83,6 +83,16 @@ GOLD_FEATURE_COLS = [
 # ── Model settings ─────────────────────────────────────────────────────────────
 TARGET_COL       = "is_flood"
 DISCHARGE_THRESH = 1.0
+
+# ── Sensor Boundaries (for DQ Score) ──────────────────────────────────────────
+SENSOR_BOUNDS = {
+    "temperature_2m": (-50.0, 60.0),
+    "relative_humidity_2m": (0.0, 100.0),
+    "precipitation": (0.0, 500.0),
+    "wind_speed_10m": (0.0, 250.0),
+    "soil_moisture_0_to_7cm": (0.0, 1.0),
+    "soil_moisture_7_to_28cm": (0.0, 1.0),
+}
 
 # ── Risk thresholds ────────────────────────────────────────────────────────────
 RISK_HIGH   = 0.60

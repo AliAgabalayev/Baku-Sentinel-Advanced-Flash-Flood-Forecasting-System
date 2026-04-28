@@ -1,21 +1,3 @@
-"""
-model.py — Baku Sentinel
-=========================
-Trains XGBoost on the Gold feature table produced by pipeline.py.
-
-Key design decisions
---------------------
-- Zone is one-hot encoded with drop_first=True, matching the notebook's
-  pd.get_dummies call (produces zone_Low Relief, zone_Moderate Relief).
-- Chronological train/test split — zero data leakage.
-- scale_pos_weight auto-computed from class imbalance.
-- F1-maximising threshold tuned on the training set.
-- Isotonic calibration for reliable probabilities.
-- SHAP TreeExplainer for global feature importance.
-- Saved artifact: models/baku_sentinel_rf.joblib
-  (name kept for backward-compat with existing notebook load code)
-"""
-
 import json
 import logging
 from pathlib import Path
@@ -33,7 +15,7 @@ from sklearn.metrics import (
     precision_recall_curve,
     roc_auc_score,
 )
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 from xgboost import XGBClassifier
 
 from src import config
@@ -42,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 # ── Non-feature columns ────────────────────────────────────────────────────────
 _DROP_COLS = {
-    "time_6h", "zone", "river_discharge",
+    "time_6h", "zone", "river_discharge", "dq_score",
     config.TARGET_COL,
 }
 
@@ -203,16 +185,17 @@ def train(df: pd.DataFrame,
         f"F1={metrics['f1_score']}  threshold={threshold:.3f}"
     )
 
-    # ── Cross-validation ──────────────────────────────────────────────────────
-    X_all, _ = prepare_features(df)
+    # ── Cross-validation (time-ordered) ──────────────────────────────────────
+    df_sorted = df.sort_values("time_6h").reset_index(drop=True)
+    X_all, _ = prepare_features(df_sorted)
     X_all = X_all.fillna(0)
     for c in feature_cols:
         if c not in X_all.columns:
             X_all[c] = 0
     X_all = X_all[feature_cols]
     cv_scores = cross_val_score(
-        XGBClassifier(**params), X_all, df[target],
-        cv=StratifiedKFold(n_splits=5, shuffle=False),
+        XGBClassifier(**params), X_all, df_sorted[target],
+        cv=TimeSeriesSplit(n_splits=5),
         scoring="average_precision", n_jobs=-1,
     )
     metrics["cv_auc_pr_mean"] = round(float(cv_scores.mean()), 4)
