@@ -336,39 +336,34 @@ Logs are written to `logs/baku_sentinel.log`. Forecast output is saved to `repor
 
 ## Daily Activities
 
-| Day | Date | Key Activities |
-|-----|------|----------------|
-| **Day 1** | April 18 | Labeling strategy defined · Dataset discovery completed · Open-Meteo API exploration + feature schema initiated · Baku flood news scraper built (Telegram + Oxu.az) |
-| **Day 2** | April 19 | README and project documentation created · Baseline meteorological features finalised · Open-Meteo feature schema locked · Day 1 deliverables submitted |
-| **Day 3** | April 20 | Repository structure initialised · Ingestion pipeline implemented with date validation and retry logic · Raw data validated |
-| **Day 4** | April 21 | 3 terrain-based risk zones defined · Silver/Gold ETL pipeline built · Feature engineering completed (37 features) · Baseline XGBoost trained with isotonic calibration · 30-day forecast pipeline with climatological extension implemented |
-| **Day 5** | April 22–28 | Label leakage fixed (same-day discharge join + CTE propagation) · CV changed to `TimeSeriesSplit` · Sampling strategy comparison (7 strategies) · Optuna hyperparameter optimization (60 trials) · F2-optimal threshold tuning for recall-priority flood detection |
+| Day | Date        | Key Activities |
+|-----|-------------|----------------|
+| **Day 1** | April 18    | Labeling strategy defined · Dataset discovery completed · Open-Meteo API exploration + feature schema initiated · Baku flood news scraper built (Telegram + Oxu.az) |
+| **Day 2** | April 19    | README and project documentation created · Baseline meteorological features finalised · Open-Meteo feature schema locked · Day 1 deliverables submitted |
+| **Day 3** | April 20    | Repository structure initialised · Ingestion pipeline implemented with date validation and retry logic · Raw data validated |
+| **Day 4** | April 21    | 3 terrain-based risk zones defined · Silver/Gold ETL pipeline built · Feature engineering completed (37 features) · Baseline XGBoost trained with isotonic calibration · 30-day forecast pipeline with climatological extension implemented |
+| **Day 5** | April 27–28 | Sampling strategy comparison (7 strategies) · Optuna hyperparameter optimization (60 trials) · F2-optimal threshold tuning for recall-priority flood detection |
 
 ---
 
 ## Task Ownership
 
-| Task | Owner | Status |
-|------|-------|--------|
-| Labeling Strategy Design | Team | ✅ Done |
-| Dataset Discovery | Nigar | ✅ Done |
-| Baku Flood News Scraper | Ali | ✅ Done |
-| Baseline Features & Open-Meteo Integration | Ali + Panahov | ✅ Done |
-| README Creation | Nəzrin | ✅ Done |
-| Repository Structure | Ali | ✅ Done |
-| Zone Separation (3 zones) | Nigar | ✅ Done |
-| Ingestion Pipeline | Ali | ✅ Done |
-| Silver → Gold ETL Pipeline | Ali | ✅ Done |
-| Feature Engineering (37 features) | All | ✅ Done |
-| Label Leakage Fix | Ali | ✅ Done |
-| XGBoost + Isotonic Calibration Model | Ali | ✅ Done |
-| TimeSeriesSplit CV | Ali | ✅ Done |
-| WeatherClimatologyModel (days 16–30) | Ali | ✅ Done |
-| 30-Day Forecast Pipeline | Ali | ✅ Done |
-| Sampling Strategy Comparison (7 strategies) | Ali | ✅ Done |
-| Optuna Hyperparameter Optimization | Ali | ✅ Done |
-| F2-Score Threshold Tuning | Ali | ✅ Done |
-| Demo UI (HTML/CSS/JS) | Panahov | 🔄 In Progress |
+| Task                                                      | Owner | Status |
+|-----------------------------------------------------------|-------|--------|
+| Labeling Strategy Design                                  | Team | ✅ Done |
+| Dataset Discovery                                         | Nigar | ✅ Done |
+| Baku Flood News Scraper                                   | Ali | ✅ Done |
+| Baseline Features & Open-Meteo Integration                | Ali + Panahov | ✅ Done |
+| README Creation                                           | Nəzrin | ✅ Done |
+| Update and restructure readme based on new criterias      | Nəzrin | ✅ Done |
+| Repository Structure                                      | Ali | ✅ Done |
+| Zone Separation (3 zones)                                 | Nigar | ✅ Done |
+| XGBoost model trainin and merge it to data pipeline       | Nigar | ✅ Done |
+| Adding error handling and quality checks to data pipeline | Nigar | ✅ Done |
+| 30-Day Forecast Pipeline                                  | Ali | ✅ Done |
+| Sampling Strategy Comparison (7 strategies)               | Ali | ✅ Done |
+| Optuna Hyperparameter Optimization                        | Ali | ✅ Done |
+| Demo UI (HTML/CSS/JS)                                     | Panahov | 🔄 In Progress |
 
 ---
 
