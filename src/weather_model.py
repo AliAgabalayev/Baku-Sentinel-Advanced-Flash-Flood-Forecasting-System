@@ -62,9 +62,9 @@ class WeatherClimatologyModel:
 
         # Create time grid
         time_grid = pd.date_range(
-            start=start_date.floor('6H'), 
-            end=end_date.floor('6H'), 
-            freq='6H'
+            start=start_date.floor('6h'),
+            end=end_date.floor('6h'),
+            freq='6h'
         )
         
         frames = []
