@@ -42,8 +42,26 @@ logger = logging.getLogger(__name__)
 
 # ── Non-feature columns ────────────────────────────────────────────────────────
 _DROP_COLS = {
-    "time_6h", "zone", "river_discharge",
-    config.TARGET_COL,
+    # 1. Standard Metadata/Target
+    "time_6h", "zone", config.TARGET_COL,
+
+    # 2. Redundant "Twins" (>0.90 correlation)
+    "river_discharge",           # Use discharge_lag_6h instead
+    "humidity_precip_product",   # Use precipitation instead
+    "precip_roll_max_24h",       # Use precip_roll_sum_24h instead
+    "zone_cascade_risk",         # Use highland_precip instead
+    "soil_temperature_0_to_7cm", # Use temperature_2m instead
+    "soil_saturation_index",     # Use soil_moisture_0_to_7cm instead
+    "discharge_roll_max_24h",    # Use discharge_lag_6h instead
+    "temp_lag_24h",              # Use temperature_2m instead
+    "discharge_lag_24h",         # Redundant with 6h lag
+    "precip_roll_sum_24h",       # Redundant with highland_precip
+
+    # 3. Insignificant "Noise" (p >= 0.05 in Mann-Whitney U)
+    "frozen_ground_flag",
+    "discharge_trend_6h",
+    "soil_moisture_change_6h",
+    "temp_trend_24h"
 }
 
 # ── XGBoost hyperparameters ───────────────────────────────────────────────────
@@ -181,7 +199,13 @@ def train(df: pd.DataFrame,
 
     # ── Threshold optimisation ────────────────────────────────────────────────
     train_prob = model.predict_proba(X_train)[:, 1]
-    threshold  = _best_threshold(y_train, train_prob)
+    # threshold  = _best_threshold(y_train, train_prob)
+
+    # We are overriding the F1-max threshold (0.80) with a manual safety threshold (0.40)
+    # based on our reliability diagram and the need for higher Recall.
+    threshold = 0.30
+    logger.info(f"Using manual safety threshold: {threshold}")
+
 
     # ── Evaluation ────────────────────────────────────────────────────────────
     test_prob = model.predict_proba(X_test)[:, 1]
