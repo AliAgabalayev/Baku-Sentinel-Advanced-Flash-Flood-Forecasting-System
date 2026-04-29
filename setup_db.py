@@ -33,6 +33,7 @@ def main() -> None:
     logger.info(f"Loaded {len(df):,} rows. Running model inference...")
     df_pred = model.predict(df)
     df_pred["risk_level"] = df_pred["risk_level"].astype(str)
+    df_pred["risk_score"] = df_pred["risk_score"].astype("float64")
     df_out = df_pred[_COLS].copy()
 
     logger.info(f"Writing {len(df_out):,} rows to gold.predictions...")

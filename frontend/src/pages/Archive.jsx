@@ -286,9 +286,8 @@ function HistoricalChart({ data, zone }) {
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 export default function Archive() {
-  const today    = new Date()
-  const [start, setStart] = useState(format(subDays(today, 30), 'yyyy-MM-dd'))
-  const [end,   setEnd]   = useState(format(subDays(today, 1),  'yyyy-MM-dd'))
+  const [start, setStart] = useState('2022-11-01')
+  const [end,   setEnd]   = useState('2022-12-31')
   const [zone,  setZone]  = useState('Low Relief')
   const [data,  setData]  = useState([])
   const [loading, setLoading] = useState(false)
