@@ -5,14 +5,14 @@ const TEAM = [
     name: 'Ali Agabalazade',
     role: 'Lead ML / Data Engineer',
     icon: '⚙️',
-    tasks: ['XGBoost model', '30-day forecast pipeline', 'Sampling strategy', 'Optuna optimisation'],
+    tasks: ['XGBoost model', '30-day forecast pipeline', 'Sampling strategy', 'Optuna optimisation', 'Silver/Gold ETL pipeline'],
     color: '#00ccff',
   },
   {
     name: 'Nigar Rustamova',
     role: 'Data Analyst · Geospatial',
     icon: '🗺️',
-    tasks: ['Zone topology (GADM)', 'Silver/Gold ETL pipeline', 'Feature engineering', 'Model training & merge'],
+    tasks: ['Zone topology (GADM)', 'Baseline XGBoost model', 'Feature engineering', 'Model training & merge'],
     color: '#00e87a',
   },
   {
@@ -44,14 +44,14 @@ const PIPELINE_STEPS = [
     num: '02',
     icon: '🧪',
     title: 'Feature Engineering',
-    body: '37 predictive signals are computed — including rolling rainfall totals, soil saturation indices, and terrain cascade multipliers that model how water flows downhill from the highlands to the coastal core.',
+    body: '27 predictive signals are computed — including rolling rainfall totals, soil saturation indices, and terrain cascade multipliers that model how water flows downhill from the highlands to the coastal core.',
     color: '#00e87a',
   },
   {
     num: '03',
     icon: '🤖',
     title: 'AI Risk Prediction',
-    body: 'An XGBoost model — trained on 6 years of data with isotonic probability calibration — outputs a risk score for each zone every 6 hours. It is optimised to catch floods early, even at the cost of occasional false alarms.',
+    body: 'An XGBoost model — trained on 6 years of data using ROS oversampling and Optuna hyperparameter search — outputs a risk score for each zone every 6 hours. It is optimised to catch floods early, even at the cost of occasional false alarms.',
     color: '#9966ff',
   },
   {
@@ -64,7 +64,7 @@ const PIPELINE_STEPS = [
 ]
 
 const TECH_STACK = [
-  { name: 'XGBoost', category: 'ML Model',     icon: '🌲', desc: 'Gradient boosted trees with isotonic calibration' },
+  { name: 'XGBoost', category: 'ML Model',     icon: '🌲', desc: 'Gradient boosted trees with ROS + Optuna tuning' },
   { name: 'DuckDB',  category: 'Data Layer',    icon: '🦆', desc: 'In-process analytics DB for Bronze/Silver/Gold pipeline' },
   { name: 'Open-Meteo', category: 'Data Source', icon: '🌐', desc: 'Free weather & flood API — no key required' },
   { name: 'Optuna',  category: 'Optimisation',  icon: '🔬', desc: 'TPE hyperparameter search · 60 trials, TimeSeriesSplit' },
@@ -75,12 +75,12 @@ const TECH_STACK = [
 ]
 
 const MODEL_METRICS = [
-  { label: 'AUC-PR',     value: '98.2%', desc: 'Precision-Recall area', color: '#00e87a' },
-  { label: 'AUC-ROC',    value: '99.7%', desc: 'Discrimination ability', color: '#00ccff' },
-  { label: 'F1 Score',   value: '79.0%', desc: 'Balanced precision/recall', color: '#9966ff' },
+  { label: 'AUC-PR',     value: '41.7%', desc: 'Precision-Recall area', color: '#00e87a' },
+  { label: 'AUC-ROC',    value: '92.3%', desc: 'Discrimination ability', color: '#00ccff' },
+  { label: 'F1 Score',   value: '42.7%', desc: 'Balanced precision/recall', color: '#9966ff' },
   { label: 'CV Folds',   value: '5×TSS', desc: 'TimeSeriesSplit validation', color: '#ffaa00' },
   { label: 'Train Rows', value: '22K',   desc: '6 years of 6-hourly data', color: '#00ccff' },
-  { label: 'Features',   value: '37',    desc: 'Engineered signal columns', color: '#00e87a' },
+  { label: 'Features',   value: '27',    desc: 'Engineered signal columns', color: '#00e87a' },
 ]
 
 function fadeIn(delay = 0) {
