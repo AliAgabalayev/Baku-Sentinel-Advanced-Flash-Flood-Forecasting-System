@@ -18,7 +18,6 @@ Key design decisions
 
 import json
 import logging
-from pathlib import Path
 from typing import Optional, Tuple
 
 import joblib
@@ -200,11 +199,7 @@ def train(df: pd.DataFrame,
         model = base
 
     # ── Threshold optimisation ────────────────────────────────────────────────
-    train_prob = model.predict_proba(X_train)[:, 1]
-    # threshold  = _best_threshold(y_train, train_prob)
-
-    # We are overriding the F1-max threshold (0.80) with a manual safety threshold (0.40)
-    # based on our reliability diagram and the need for higher Recall.
+    # Manual safety threshold chosen from reliability diagram (higher Recall priority).
     threshold = 0.30
     logger.info(f"Using manual safety threshold: {threshold}")
 

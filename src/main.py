@@ -18,8 +18,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import pandas as pd
-
 from src import config, predict
 import ingestion
 import pipeline
