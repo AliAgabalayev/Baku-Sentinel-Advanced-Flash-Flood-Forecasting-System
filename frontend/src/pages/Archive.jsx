@@ -132,10 +132,19 @@ function ComparisonTable({ data, zone }) {
     )
   }
 
+  const WINDOW_48H = 48 * 60 * 60 * 1000
   const getStatus = (row) => {
-    if (row.is_flood === 1 && row.flood_pred === 1) return { label: 'DETECTED',    color: '#00e87a' }
-    if (row.is_flood === 1 && row.flood_pred === 0) return { label: 'MISSED',      color: '#ff3344' }
-    return                                                  { label: 'FALSE ALARM', color: '#ffaa00' }
+    if (row.is_flood === 1 && row.flood_pred === 1) return { label: 'DETECTED',       color: '#00e87a' }
+    if (row.is_flood === 1 && row.flood_pred === 0) return { label: 'MISSED',          color: '#ff3344' }
+    // flood_pred=1, is_flood=0 — check if a real flood fires within ±48 h same zone
+    const t = new Date(row.time).getTime()
+    const nearFlood = data.some(d =>
+      d.zone === row.zone && d.is_flood === 1 &&
+      Math.abs(new Date(d.time).getTime() - t) <= WINDOW_48H
+    )
+    return nearFlood
+      ? { label: 'EARLY WARNING', color: '#ffaa00' }
+      : { label: 'FALSE ALARM',   color: '#ff6600' }
   }
 
   return (
