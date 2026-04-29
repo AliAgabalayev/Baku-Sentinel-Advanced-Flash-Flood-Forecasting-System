@@ -8,7 +8,6 @@ Calculates historical averages for each zone, day of year, and hour.
 import logging
 import duckdb
 import pandas as pd
-import numpy as np
 from src import config
 
 logger = logging.getLogger(__name__)

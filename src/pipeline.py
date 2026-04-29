@@ -315,7 +315,7 @@ def run_forecast_pipeline(df_forecast: pd.DataFrame, extend_to_days: int = 30) -
         conn.execute(f"CREATE SCHEMA IF NOT EXISTS {config.SCHEMA_SILVER}")
         conn.execute("CREATE OR REPLACE TEMP TABLE forecast_raw_temp AS SELECT * FROM df_forecast")
 
-        df_live_6h = conn.execute(f"""
+        df_live_6h = conn.execute("""
         SELECT
             zone,
             time_bucket(INTERVAL '6 hours', time) AS time_6h,
@@ -334,9 +334,9 @@ def run_forecast_pipeline(df_forecast: pd.DataFrame, extend_to_days: int = 30) -
         """).df()
 
         if extend_to_days > 15:
-            df_silver_6h = weather_model.get_extended_forecast(df_live_6h, target_days=extend_to_days)
+            df_silver_6h = weather_model.get_extended_forecast(df_live_6h, target_days=extend_to_days)  # noqa: F841
         else:
-            df_silver_6h = df_live_6h
+            df_silver_6h = df_live_6h  # noqa: F841
 
         conn.execute(f"""
         CREATE TABLE IF NOT EXISTS {config.SCHEMA_SILVER}.weather_stream_6h AS

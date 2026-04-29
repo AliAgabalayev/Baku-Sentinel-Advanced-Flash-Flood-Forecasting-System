@@ -12,7 +12,6 @@ Bronze tables:
 import logging
 import random
 import time
-from typing import Optional
 
 import duckdb
 import pandas as pd
