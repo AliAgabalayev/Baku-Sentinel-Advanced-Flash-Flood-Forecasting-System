@@ -10,7 +10,7 @@ Endpoints:
 
 import json
 import os
-from datetime import date
+from datetime import datetime
 
 import duckdb
 import pandas as pd
@@ -100,9 +100,10 @@ def _forecast_from_gold(conn) -> pd.DataFrame:
 
 @app.get("/api/forecast")
 def get_forecast():
-    today = date.today().isoformat()
-    if today in _forecast_cache:
-        return _forecast_cache[today]
+    now = datetime.now()
+    cache_key = f"{now.date().isoformat()}-{now.hour // 6}"
+    if cache_key in _forecast_cache:
+        return _forecast_cache[cache_key]
 
     try:
         if LIVE_MODE:
@@ -118,7 +119,7 @@ def get_forecast():
 
         data = _serialize_forecast(df)
         _forecast_cache.clear()
-        _forecast_cache[today] = data
+        _forecast_cache[cache_key] = data
         return data
 
     except HTTPException:
