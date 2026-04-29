@@ -1,0 +1,53 @@
+name: Weekly Forecast
+
+on:
+  schedule:
+    - cron: "0 20 * * 0"  # Sunday 20:00 UTC = Monday 00:00 Baku time (AZT, UTC+4)
+  workflow_dispatch:
+
+concurrency:
+  group: forecast-run
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ingest historical data
+        run: python src/main.py --mode ingest
+
+      - name: Run ETL
+        run: python src/main.py --mode etl
+
+      - name: Run 30-day forecast
+        run: python src/main.py --mode forecast
+
+      - name: Commit updated forecast
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(forecast): weekly auto-update [skip ci]"
+          file_pattern: reports/forecast_30day.csv
