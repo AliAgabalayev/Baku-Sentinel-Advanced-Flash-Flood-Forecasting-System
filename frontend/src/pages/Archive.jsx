@@ -122,7 +122,6 @@ function SummaryStats({ data, zone }) {
 function ComparisonTable({ data, zone }) {
   const rows = data
     .filter(d => d.zone === zone && (d.is_flood === 1 || d.flood_pred === 1))
-    .slice(0, 20)
 
   if (!rows.length) {
     return (
@@ -161,6 +160,7 @@ function ComparisonTable({ data, zone }) {
         <span>STATUS</span>
       </div>
 
+      <div style={{ maxHeight: '420px', overflowY: 'auto' }}>
       {rows.map((row, i) => {
         const status = getStatus(row)
         return (
@@ -220,6 +220,7 @@ function ComparisonTable({ data, zone }) {
           </motion.div>
         )
       })}
+      </div>
     </div>
   )
 }
