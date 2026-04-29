@@ -90,18 +90,16 @@ function SummaryStats({ data, zone }) {
   const zoneData = data.filter(d => d.zone === zone)
   if (!zoneData.length) return null
 
-  const maxPrecip   = Math.max(...zoneData.map(d => d.precipitation)).toFixed(1)
-  const avgPredicted = (zoneData.reduce((s, d) => s + d.predicted_score, 0) / zoneData.length * 100).toFixed(1)
-  const highCount   = zoneData.filter(d => d.actual_level === 'HIGH').length
-  const accuracy    = zoneData.length
-    ? (zoneData.filter(d => d.predicted_level === d.actual_level).length / zoneData.length * 100).toFixed(0)
-    : '—'
+  const maxPrecip    = Math.max(...zoneData.map(d => d.precipitation)).toFixed(1)
+  const floodEvents  = zoneData.filter(d => d.is_flood === 1).length
+  const detected     = zoneData.filter(d => d.is_flood === 1 && d.flood_pred === 1).length
+  const missed       = zoneData.filter(d => d.is_flood === 1 && d.flood_pred === 0).length
 
   const stats = [
-    { label: 'PEAK RAIN',   value: `${maxPrecip} mm`, color: '#00ccff' },
-    { label: 'AVG RISK',    value: `${avgPredicted}%`, color: '#ffaa00' },
-    { label: 'ALERT SLOTS', value: highCount,          color: '#ff3344' },
-    { label: 'ACCURACY',    value: `${accuracy}%`,     color: '#00e87a' },
+    { label: 'PEAK RAIN',    value: `${maxPrecip} mm`, color: '#00ccff' },
+    { label: 'FLOOD EVENTS', value: floodEvents,        color: '#ff3344' },
+    { label: 'DETECTED',     value: detected,           color: '#00e87a' },
+    { label: 'MISSED',       value: missed,             color: '#ffaa00' },
   ]
 
   return (
@@ -123,18 +121,22 @@ function SummaryStats({ data, zone }) {
 // ── Comparison Table ───────────────────────────────────────────────────────────
 function ComparisonTable({ data, zone }) {
   const rows = data
-    .filter(d => d.zone === zone && (d.predicted_level !== 'LOW' || d.actual_level !== 'LOW'))
-    .slice(0, 12)
+    .filter(d => d.zone === zone && (d.is_flood === 1 || d.flood_pred === 1))
+    .slice(0, 20)
 
   if (!rows.length) {
     return (
       <div className="text-center py-8 font-mono text-xs" style={{ color: '#1e4060' }}>
-        No notable events in this range for {zone}
+        No flood events or model alerts in this range for {zone}
       </div>
     )
   }
 
-  const levelColor = { HIGH: '#ff3344', MEDIUM: '#ffaa00', LOW: '#00e87a' }
+  const getStatus = (row) => {
+    if (row.is_flood === 1 && row.flood_pred === 1) return { label: 'DETECTED',    color: '#00e87a' }
+    if (row.is_flood === 1 && row.flood_pred === 0) return { label: 'MISSED',      color: '#ff3344' }
+    return                                                  { label: 'FALSE ALARM', color: '#ffaa00' }
+  }
 
   return (
     <div className="overflow-hidden rounded-xl" style={{ border: '1px solid rgba(0,204,255,0.1)' }}>
@@ -145,13 +147,13 @@ function ComparisonTable({ data, zone }) {
       >
         <span>DATE · TIME</span>
         <span>RAIN (mm)</span>
-        <span>AI FORECAST</span>
-        <span>ACTUAL</span>
-        <span>MATCH</span>
+        <span>FLOOD PRED</span>
+        <span>ACTUAL FLOOD</span>
+        <span>STATUS</span>
       </div>
 
       {rows.map((row, i) => {
-        const match = row.predicted_level === row.actual_level
+        const status = getStatus(row)
         return (
           <motion.div
             key={i}
@@ -174,28 +176,37 @@ function ComparisonTable({ data, zone }) {
               <span
                 className="px-2 py-0.5 rounded-full text-[10px]"
                 style={{
-                  background: `${levelColor[row.predicted_level]}15`,
-                  color: levelColor[row.predicted_level],
-                  border: `1px solid ${levelColor[row.predicted_level]}30`,
+                  background: row.flood_pred === 1 ? 'rgba(255,51,68,0.12)' : 'rgba(0,232,122,0.08)',
+                  color:      row.flood_pred === 1 ? '#ff3344' : '#00e87a',
+                  border:     `1px solid ${row.flood_pred === 1 ? 'rgba(255,51,68,0.3)' : 'rgba(0,232,122,0.2)'}`,
                 }}
               >
-                {row.predicted_level}
+                {row.flood_pred === 1 ? 'FLOOD' : 'CLEAR'}
               </span>
             </div>
             <div>
               <span
                 className="px-2 py-0.5 rounded-full text-[10px]"
                 style={{
-                  background: `${levelColor[row.actual_level]}15`,
-                  color: levelColor[row.actual_level],
-                  border: `1px solid ${levelColor[row.actual_level]}30`,
+                  background: row.is_flood === 1 ? 'rgba(255,51,68,0.12)' : 'rgba(0,232,122,0.08)',
+                  color:      row.is_flood === 1 ? '#ff3344' : '#00e87a',
+                  border:     `1px solid ${row.is_flood === 1 ? 'rgba(255,51,68,0.3)' : 'rgba(0,232,122,0.2)'}`,
                 }}
               >
-                {row.actual_level}
+                {row.is_flood === 1 ? 'FLOOD' : 'NO FLOOD'}
               </span>
             </div>
-            <div style={{ color: match ? '#00e87a' : '#ff3344', fontSize: '14px' }}>
-              {match ? '✓' : '✗'}
+            <div>
+              <span
+                className="px-2 py-0.5 rounded-full text-[10px]"
+                style={{
+                  background: `${status.color}12`,
+                  color: status.color,
+                  border: `1px solid ${status.color}30`,
+                }}
+              >
+                {status.label}
+              </span>
             </div>
           </motion.div>
         )
@@ -387,7 +398,7 @@ export default function Archive() {
               className="font-mono text-[9px] px-3 py-1.5 rounded-full"
               style={{ background: 'rgba(0,204,255,0.06)', border: '1px solid rgba(0,204,255,0.15)', color: '#3a6a8a' }}
             >
-              XGBoost · Isotonic Calibration · F2-Optimised
+              XGBoost · ROS + Optuna · F2-Optimised
             </div>
           </div>
 

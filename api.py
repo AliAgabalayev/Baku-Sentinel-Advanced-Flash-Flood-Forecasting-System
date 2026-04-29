@@ -159,6 +159,8 @@ def get_historical(
             "precipitation": float(row.precipitation),
             "predicted_score": float(row.risk_score),
             "actual_score": float(row.is_flood),
+            "flood_pred": int(row.flood_pred),
+            "is_flood": int(row.is_flood),
             "predicted_level": _risk_level_str(float(row.risk_score)),
             "actual_level": _risk_level_str(float(row.is_flood)),
             "event_label": None,
