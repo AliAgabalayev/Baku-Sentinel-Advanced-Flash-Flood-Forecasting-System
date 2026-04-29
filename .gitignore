@@ -218,3 +218,9 @@ logs/
 .ipynb_checkpoints/
 /data/
 /docs/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+!docs/superpowers/
