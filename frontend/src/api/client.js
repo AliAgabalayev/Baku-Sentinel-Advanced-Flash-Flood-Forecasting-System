@@ -139,7 +139,7 @@ export function generateHistoricalMock(startDate, endDate) {
 // ── API Client ────────────────────────────────────────────────────────────────
 
 // Set to false and ensure your FastAPI backend is running on :8000 to go live
-const USE_MOCK = true
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 function delay(ms) {
   return new Promise(r => setTimeout(r, ms))
