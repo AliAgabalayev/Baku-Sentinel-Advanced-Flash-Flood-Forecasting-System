@@ -224,5 +224,5 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env
 
-# Experiment models — only production model is versioned
-models/day05_*.joblib
+# Experiment models/metrics — only production model is versioned
+models/day05_*
