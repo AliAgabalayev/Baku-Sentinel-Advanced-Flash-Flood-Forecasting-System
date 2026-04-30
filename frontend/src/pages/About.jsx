@@ -75,12 +75,12 @@ const TECH_STACK = [
 ]
 
 const MODEL_METRICS = [
-  { label: 'AUC-PR',     value: '41.7%', desc: 'Precision-Recall area', color: '#00e87a' },
-  { label: 'AUC-ROC',    value: '92.3%', desc: 'Discrimination ability', color: '#00ccff' },
-  { label: 'F1 Score',   value: '42.7%', desc: 'Balanced precision/recall', color: '#9966ff' },
-  { label: 'CV Folds',   value: '5×TSS', desc: 'TimeSeriesSplit validation', color: '#ffaa00' },
-  { label: 'Train Rows', value: '22K',   desc: '6 years of 6-hourly data', color: '#00ccff' },
-  { label: 'Features',   value: '27',    desc: 'Engineered signal columns', color: '#00e87a' },
+  { label: 'CV PR-AUC',     value: '0.24 ± 0.13', desc: 'Cross-val precision-recall (headline)', color: '#00e87a' },
+  { label: 'Test PR-AUC',   value: '41.7%',        desc: 'Held-out split (single favourable cut)', color: '#3a9a60' },
+  { label: 'AUC-ROC',       value: '92.3%',        desc: 'Discrimination ability', color: '#00ccff' },
+  { label: 'F1 Score',      value: '42.7%',        desc: 'Balanced precision/recall', color: '#9966ff' },
+  { label: 'Train Rows',    value: '22K',           desc: '6 years of 6-hourly data', color: '#00ccff' },
+  { label: 'Features',      value: '27',            desc: 'Engineered signal columns', color: '#00e87a' },
 ]
 
 function fadeIn(delay = 0) {

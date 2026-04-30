@@ -171,7 +171,7 @@ def get_historical(
 
 @app.get("/api/metrics")
 def get_metrics():
-    path = config.MODELS_DIR / "baku_sentinel_rf_metrics.json"
+    path = config.MODELS_DIR / "baku_sentinel_xgb_metrics.json"
     if not path.exists():
         raise HTTPException(status_code=404, detail="Metrics file not found")
     with open(path) as f:

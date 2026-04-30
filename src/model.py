@@ -92,7 +92,7 @@ def _best_threshold(y_true: np.ndarray, y_prob: np.ndarray) -> float:
 
 def train(df: pd.DataFrame,
           calibrate: bool = True,
-          model_name: str = "baku_sentinel_rf") -> dict:
+          model_name: str = "baku_sentinel_xgb") -> dict:
     target = config.TARGET_COL
     if target not in df.columns:
         raise ValueError(f"Target '{target}' not in DataFrame.")
@@ -223,7 +223,7 @@ def _save(bundle: dict, model_name: str) -> None:
         json.dump(save_meta, f, indent=2)
     logger.info(f"Model saved → {path}")
 
-def load_model(model_name: str = "baku_sentinel_rf") -> dict:
+def load_model(model_name: str = "baku_sentinel_xgb") -> dict:
     path = config.MODELS_DIR / f"{model_name}.joblib"
     if not path.exists():
         raise FileNotFoundError(f"Model not found: {path}")
@@ -231,7 +231,7 @@ def load_model(model_name: str = "baku_sentinel_rf") -> dict:
 
 def predict(df_features: pd.DataFrame,
             checkpoint: Optional[dict] = None,
-            model_name: str = "baku_sentinel_rf") -> pd.DataFrame:
+            model_name: str = "baku_sentinel_xgb") -> pd.DataFrame:
     if checkpoint is None:
         checkpoint = load_model(model_name)
 
