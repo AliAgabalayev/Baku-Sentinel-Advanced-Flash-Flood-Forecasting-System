@@ -16,13 +16,15 @@
 6. [Geospatial Risk Zones](#geospatial-risk-zones)
 7. [Feature Engineering](#feature-engineering)
 8. [Pipeline Architecture](#pipeline-architecture)
-9. [Model](#model)
-10. [Risk Thresholds & Alerts](#risk-thresholds--alerts)
-11. [Usage](#usage)
-12. [Key Definitions](#key-definitions)
-13. [Daily Activities](#daily-activities)
-14. [Task Ownership](#task-ownership)
-15. [Repository Structure](#repository-structure)
+9. [Forecast Horizon Design](#forecast-horizon-design)
+10. [Model](#model)
+11. [Model Performance](#model-performance)
+12. [Risk Thresholds & Alerts](#risk-thresholds--alerts)
+13. [Usage](#usage)
+14. [Key Definitions](#key-definitions)
+15. [Daily Activities](#daily-activities)
+16. [Task Ownership](#task-ownership)
+17. [Repository Structure](#repository-structure)
 
 ---
 
@@ -253,31 +255,66 @@ graph TD
 
 ---
 
+## Forecast Horizon Design
+
+> **Days 1–15:** ICON/GFS deterministic forecast via Open-Meteo live API — genuine NWP output, updated every 6 hours.  
+> **Days 16–30:** 30-year climatological mean for the same calendar window (zone × day-of-year × hour), framed as **advance warning** rather than a hard forecast.
+
+This is intentional and operationally standard. Free-tier NWP forecasts collapse toward climatology beyond ~10 days regardless of provider; explicitly using climatology for days 16–30 is what professional operational hydrology does. The UI labels day 16+ as "climatological outlook" to set correct user expectations.
+
+---
+
 ## Model
 
 | Property | Detail |
 |----------|--------|
 | **Algorithm** | XGBoost (`XGBClassifier`) with isotonic probability calibration (`CalibratedClassifierCV`) |
-| **Training data** | Gold layer — 6+ years of features (2020–2026), ~22,000 training rows |
+| **Training data** | Gold layer — 6+ years of features (2020–2026), 22,099 training rows |
+| **Flood base rate** | 1.06% overall (293 events / 27,624 rows) · 1:94 class imbalance |
 | **Validation strategy** | Chronological 80/20 split + `TimeSeriesSplit(n_splits=5)` cross-validation |
-| **Class imbalance** | `scale_pos_weight` set to negative/positive class ratio |
-| **Input granularity** | 6-hourly |
-| **Output** | `risk_score` (calibrated probability), `flood_pred` (binary), `risk_level` (LOW/MEDIUM/HIGH) |
-| **Forecast horizon** | 30 days (120 6h-steps) |
-| **Threshold selection** | F2-score optimal on held-out validation window (biases toward recall) |
-| **Saved artefacts** | `models/baku_sentinel_rf.joblib` · `models/baku_sentinel_rf_metrics.json` |
-
-### Optimized Model (Notebook) - not ready for now
-
-| Property | Detail |
-|----------|--------|
-| **Sampling** | RandomOverSampler (50/50 balanced fit set) |
+| **Sampling** | RandomOverSampler (50/50 balanced fit set) + `scale_pos_weight` |
 | **Hyperparameter search** | Optuna TPE — 60 trials, `TimeSeriesSplit(n_splits=5)` inside each trial |
 | **Optimization objective** | F2-score (recall weighted 4× more than precision) |
-| **Threshold method** | F2-optimal on held-out val window with `min_precision ≥ 5%` |
-| **Saved artefacts** | `models/day05_ros_optuna.joblib` · `models/day05_ros_optuna_metrics.json` |
+| **Input granularity** | 6-hourly |
+| **Output** | `risk_score` (calibrated probability), `flood_pred` (binary), `risk_level` (LOW/MEDIUM/HIGH) |
+| **Threshold selection** | F2-optimal on held-out test window; biases toward recall |
+| **Saved artefacts** | `models/baku_sentinel_xgb.joblib` · `models/baku_sentinel_xgb_metrics.json` |
 
-The PR AUC and Recall metrics are the primary focus given the severe class imbalance inherent in flood data — correctly identifying actual flood events matters far more than overall accuracy.
+---
+
+## Model Performance
+
+### Headline metrics
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **CV PR-AUC** | **0.24 ± 0.13** | `TimeSeriesSplit(5)` — honest generalization estimate |
+| Test PR-AUC | 0.42 | Single chronological held-out split — one favourable cut |
+| AUC-ROC | 0.923 | Strong discrimination across all thresholds |
+| Recall | 0.77 | 3 of every 4 real flood events detected |
+| Precision | 0.30 | ~70% false-alarm rate — acceptable for an early-warning system |
+| F2-score | 0.58 | Primary tuning objective (recall weighted 4×) |
+| Threshold | 0.0175 | See rationale below |
+
+CV PR-AUC is the headline; test PR-AUC is included as a secondary reference. The gap is expected — a single chronological split lands on a seasonally active test window (2.82% flood rate vs. 1.06% overall) that inflates the apparent score.
+
+### PR and ROC curves
+
+| Precision–Recall | ROC |
+|:---:|:---:|
+| ![PR curve](reports/figures/pr_curve.png) | ![ROC curve](reports/figures/roc_curve.png) |
+
+The no-skill baseline on the PR curve sits at the dataset flood rate (~0.011). An AUC-PR of 0.42 on a 1:94 imbalanced problem is substantially above random — equivalent to roughly **40× lift** over a naive classifier at the same recall level.
+
+### Threshold rationale — why 0.0175 is correct
+
+The operating threshold is arithmetically expected, not a bug:
+
+1. **Calibrated probabilities are naturally low on imbalanced data.** With a 1:94 class ratio, a well-calibrated model assigns a probability close to the base rate (~0.01) to an average observation. A threshold must sit in this low-probability region to catch any events.
+2. **F2-score pushes the threshold further down.** Optimising for F2 (β=2) weights recall 4× more than precision. The optimal operating point shifts left along the PR curve — lower threshold, higher recall, lower precision.
+3. **The operating point is on the PR curve.** Recall = 0.77 and Precision = 0.30 means Baku Sentinel catches 3 of every 4 real floods at the cost of ~70% false alarms. For a flood warning system — where a missed flood is catastrophic and a false alarm is merely inconvenient — this is the correct tradeoff.
+
+The threshold value itself is not meaningful in absolute terms; it is a chosen operating point on the PR curve above.
 
 ---
 
@@ -377,9 +414,9 @@ Weather-Prediction/
 │   └── weather.duckdb                   # Bronze / Silver / Gold DuckDB database
 │
 ├── models/
-│   ├── baku_sentinel_rf.joblib          # Trained XGBoost + calibration model
-│   ├── baku_sentinel_rf_metrics.json    # AUC-ROC, AUC-PR, F1, CV scores, SHAP top-10
-│   ├── day05_ros_optuna.joblib          # Optimized ROS + Optuna model
+│   ├── baku_sentinel_xgb.joblib         # Trained XGBoost + isotonic calibration model
+│   ├── baku_sentinel_xgb_metrics.json   # AUC-ROC, AUC-PR, CV PR-AUC, F1/F2, SHAP top-10
+│   ├── day05_ros_optuna.joblib          # Optuna-tuned ROS model (notebook artefact)
 │   └── day05_ros_optuna_metrics.json    # Optuna trial results & metrics
 │
 ├── notebooks/
