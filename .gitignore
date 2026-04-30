@@ -223,3 +223,6 @@ logs/
 frontend/node_modules/
 frontend/dist/
 frontend/.env
+
+# Experiment models/metrics — only production model is versioned
+models/day05_*

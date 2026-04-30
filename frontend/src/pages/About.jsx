@@ -75,10 +75,10 @@ const TECH_STACK = [
 ]
 
 const MODEL_METRICS = [
-  { label: 'CV PR-AUC',     value: '0.24 ± 0.13', desc: 'Cross-val precision-recall (headline)', color: '#00e87a' },
-  { label: 'Test PR-AUC',   value: '41.7%',        desc: 'Held-out split (single favourable cut)', color: '#3a9a60' },
-  { label: 'AUC-ROC',       value: '92.3%',        desc: 'Discrimination ability', color: '#00ccff' },
-  { label: 'Recall',        value: '76.9%',        desc: 'Flood events caught (true positive rate)', color: '#9966ff' },
+  { label: 'CV PR-AUC',     value: '0.26 ± 0.16', desc: 'Cross-val precision-recall (headline)', color: '#00e87a' },
+  { label: 'Test PR-AUC',   value: '45.7%',        desc: 'Held-out split (single favourable cut)', color: '#3a9a60' },
+  { label: 'AUC-ROC',       value: '93.2%',        desc: 'Discrimination ability', color: '#00ccff' },
+  { label: 'Recall',        value: '79.5%',        desc: 'Flood events caught (true positive rate)', color: '#9966ff' },
   { label: 'Train Rows',    value: '22K',           desc: '6 years of 6-hourly data', color: '#00ccff' },
   { label: 'Features',      value: '27',            desc: 'Engineered signal columns', color: '#00e87a' },
 ]

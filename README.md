@@ -288,15 +288,15 @@ This is intentional and operationally standard. Free-tier NWP forecasts collapse
 
 | Metric | Value | Notes |
 |--------|-------|-------|
-| **CV PR-AUC** | **0.24 ± 0.13** | `TimeSeriesSplit(5)` — honest generalization estimate |
-| Test PR-AUC | 0.42 | Single chronological held-out split — one favourable cut |
-| AUC-ROC | 0.923 | Strong discrimination across all thresholds |
-| Recall | 0.77 | 3 of every 4 real flood events detected |
-| Precision | 0.30 | ~70% false-alarm rate — acceptable for an early-warning system |
-| F2-score | 0.58 | Primary tuning objective (recall weighted 4×) |
-| Threshold | 0.0175 | See rationale below |
+| **CV PR-AUC** | **0.26 ± 0.16** | `TimeSeriesSplit(5)` — honest generalization estimate |
+| Test PR-AUC | 0.457 | Single chronological held-out split — one favourable cut |
+| AUC-ROC | 0.932 | Strong discrimination across all thresholds |
+| Recall | 0.795 | ~4 of every 5 real flood events detected |
+| Precision | 0.330 | ~67% false-alarm rate — acceptable for an early-warning system |
+| F1-score | 0.466 | Harmonic mean of precision and recall |
+| Threshold | 0.0322 | See rationale below |
 
-CV PR-AUC is the headline; test PR-AUC is included as a secondary reference. The gap is expected — a single chronological split lands on a seasonally active test window (2.82% flood rate vs. 1.06% overall) that inflates the apparent score.
+CV PR-AUC is the headline; test PR-AUC is included as a secondary reference. The gap is expected — a single chronological split lands on a seasonally active test window (2.82% flood rate vs. 1.06% overall) that inflates the apparent score. Hyperparameters tuned via Optuna TPE search (60 trials, TimeSeriesSplit cv=5).
 
 ### PR and ROC curves
 
@@ -304,15 +304,15 @@ CV PR-AUC is the headline; test PR-AUC is included as a secondary reference. The
 |:---:|:---:|
 | ![PR curve](reports/figures/pr_curve.png) | ![ROC curve](reports/figures/roc_curve.png) |
 
-The no-skill baseline on the PR curve sits at the dataset flood rate (~0.011). An AUC-PR of 0.42 on a 1:94 imbalanced problem is substantially above random — equivalent to roughly **40× lift** over a naive classifier at the same recall level.
+The no-skill baseline on the PR curve sits at the dataset flood rate (~0.011). An AUC-PR of 0.457 on a highly imbalanced problem is substantially above random — equivalent to roughly **40× lift** over a naive classifier at the same recall level.
 
-### Threshold rationale — why 0.0175 is correct
+### Threshold rationale — why 0.0322 is correct
 
 The operating threshold is arithmetically expected, not a bug:
 
-1. **Calibrated probabilities are naturally low on imbalanced data.** With a 1:94 class ratio, a well-calibrated model assigns a probability close to the base rate (~0.01) to an average observation. A threshold must sit in this low-probability region to catch any events.
-2. **F2-score pushes the threshold further down.** Optimising for F2 (β=2) weights recall 4× more than precision. The optimal operating point shifts left along the PR curve — lower threshold, higher recall, lower precision.
-3. **The operating point is on the PR curve.** Recall = 0.77 and Precision = 0.30 means Baku Sentinel catches 3 of every 4 real floods at the cost of ~70% false alarms. For a flood warning system — where a missed flood is catastrophic and a false alarm is merely inconvenient — this is the correct tradeoff.
+1. **Calibrated probabilities are naturally low on imbalanced data.** With a 1:160 class ratio in training, a well-calibrated model assigns a probability close to the base rate (~0.01) to an average observation. A threshold must sit in this low-probability region to catch any events.
+2. **F2-score pushes the threshold down.** Optimising for F2 (β=2) weights recall 4× more than precision. The optimal operating point shifts left along the PR curve — lower threshold, higher recall, lower precision.
+3. **The operating point is on the PR curve.** Recall = 0.795 and Precision = 0.330 means Baku Sentinel catches ~4 of every 5 real floods at the cost of ~67% false alarms. For a flood warning system — where a missed flood is catastrophic and a false alarm is merely inconvenient — this is the correct tradeoff.
 
 The threshold value itself is not meaningful in absolute terms; it is a chosen operating point on the PR curve above.
 
