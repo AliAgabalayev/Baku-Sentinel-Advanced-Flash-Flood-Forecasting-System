@@ -15,7 +15,7 @@ from src import config, ingestion, pipeline, model
 
 logger = logging.getLogger(__name__)
 
-def run_30day_forecast(model_name: str = "baku_sentinel_rf") -> dict:
+def run_30day_forecast(model_name: str = "baku_sentinel_xgb") -> dict:
     """
     Executes the end-to-end 30-day forecast.
     
