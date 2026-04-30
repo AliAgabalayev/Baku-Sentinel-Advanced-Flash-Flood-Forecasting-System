@@ -245,8 +245,8 @@ function ModelBadge() {
       </div>
       <div className="flex gap-3 text-center">
         {[
-          { label: 'AUC-PR',  value: '98.2%' },
-          { label: 'AUC-ROC', value: '99.7%' },
+          { label: 'AUC-PR',  value: '45.7%' },
+          { label: 'AUC-ROC', value: '93.2%' },
           { label: 'CV Folds', value: '5×TSS' },
         ].map(m => (
           <div key={m.label} className="flex-1">

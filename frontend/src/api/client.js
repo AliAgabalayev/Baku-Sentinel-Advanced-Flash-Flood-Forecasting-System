@@ -169,13 +169,13 @@ export const api = {
   async getModelMetrics() {
     if (USE_MOCK) {
       return {
-        auc_roc: 0.9966,
-        auc_pr: 0.9823,
-        f1_score: 0.7899,
-        threshold: 0.7634,
+        auc_roc: 0.9319,
+        auc_pr: 0.457,
+        f1_score: 0.4662,
+        threshold: 0.0322,
         n_train: 22098,
-        cv_auc_pr_mean: 0.9973,
-        cv_auc_pr_std: 0.0023,
+        cv_auc_pr_mean: 0.2577,
+        cv_auc_pr_std: 0.164,
       }
     }
     const res = await axios.get(`${BASE_URL}/metrics`)
