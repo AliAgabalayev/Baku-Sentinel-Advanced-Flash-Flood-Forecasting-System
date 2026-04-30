@@ -42,14 +42,15 @@ _DROP_COLS = {
 }
 
 _XGB_PARAMS = {
-    "n_estimators":     500,
-    "learning_rate":    0.05,
-    "max_depth":        5,
-    "min_child_weight": 3,
-    "subsample":        0.8,
-    "colsample_bytree": 0.8,
-    "reg_alpha":        0.1,
-    "reg_lambda":       1.0,
+    "n_estimators":     511,
+    "learning_rate":    0.056542201075504325,
+    "max_depth":        3,
+    "min_child_weight": 10,
+    "subsample":        0.502314474212375,
+    "colsample_bytree": 0.43903095579116774,
+    "reg_alpha":        6.6928770111304505,
+    "reg_lambda":       9.580154309406538,
+    "gamma":            4.041986740582305,
     "eval_metric":      "aucpr",
     "random_state":     42,
     "n_jobs":           -1,

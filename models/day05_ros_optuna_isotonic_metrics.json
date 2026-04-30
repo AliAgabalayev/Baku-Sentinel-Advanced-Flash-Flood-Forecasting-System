@@ -1,0 +1,31 @@
+{
+  "AUC-PR": 0.3248,
+  "AUC-ROC": 0.9514,
+  "Brier": 0.0291,
+  "F2": 0.526,
+  "Recall": 0.5833,
+  "Precision": 0.3775,
+  "Threshold": 0.0621,
+  "TP": 77,
+  "FP": 127,
+  "FN": 55,
+  "strategy": "ROS + Optuna + Isotonic (real calib fold)",
+  "calibration": "IsotonicRegression on real held-out calib fold \u2014 zero synthetic points",
+  "split": "70/15/15 chronological",
+  "calib_positives": 39,
+  "optuna_best_cv": 0.4822,
+  "best_params": {
+    "n_estimators": 511,
+    "learning_rate": 0.056542201075504325,
+    "max_depth": 3,
+    "min_child_weight": 10,
+    "subsample": 0.502314474212375,
+    "colsample_bytree": 0.43903095579116774,
+    "reg_alpha": 6.6928770111304505,
+    "reg_lambda": 9.580154309406538,
+    "gamma": 4.041986740582305,
+    "eval_metric": "aucpr",
+    "random_state": 42,
+    "n_jobs": -1
+  }
+}
