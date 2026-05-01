@@ -35,9 +35,9 @@
 | Name | Role |
 |------|------|
 | Ali Agabalazade | Lead ML / Data Engineer |
-| Nigar Rustamova | Data Analyst / Geospatial |
+| Nigar Rustamova | Data Scientist / Geospatial |
 | Nazrin Mammadzadeh | Project Manager / Documentation |
-| Isgandar Panahov | Presentation / Documentation |
+| Isgandar Panahov | Frontend Developer / Presentation |
 
 ---
 
@@ -426,7 +426,8 @@ The API defaults to **demo mode** (`LIVE_MODE=false`), replaying stored predicti
 | 30-Day Forecast Pipeline                                  | Ali | ✅ Done |
 | Sampling Strategy Comparison (7 strategies)               | Ali | ✅ Done |
 | Optuna Hyperparameter Optimization                        | Ali | ✅ Done |
-| Demo UI (HTML/CSS/JS)                                     | Panahov | 🔄 In Progress |
+| Demo UI (HTML/CSS/JS)                                     | Panahov | ✅ Done |
+| Presentation                                              | Nigar + Ali | ✅ Done |
 
 ---
 
