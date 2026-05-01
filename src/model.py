@@ -24,21 +24,19 @@ logger = logging.getLogger(__name__)
 _DROP_COLS = {
     "time_6h", "zone", "river_discharge", "dq_score",
     config.TARGET_COL,
-    "time_6h", "zone", config.TARGET_COL,
-    "river_discharge",           
-    "humidity_precip_product",   
-    "precip_roll_max_24h",       
-    "zone_cascade_risk",         
-    "soil_temperature_0_to_7cm", 
-    "soil_saturation_index",     
-    "discharge_roll_max_24h",    
-    "temp_lag_24h",              
-    "discharge_lag_24h",         
-    "precip_roll_sum_24h",       
+    "humidity_precip_product",
+    "precip_roll_max_24h",
+    "zone_cascade_risk",
+    "soil_temperature_0_to_7cm",
+    "soil_saturation_index",
+    "discharge_roll_max_24h",
+    "temp_lag_24h",
+    "discharge_lag_24h",
+    "precip_roll_sum_24h",
     "frozen_ground_flag",
     "discharge_trend_6h",
     "soil_moisture_change_6h",
-    "temp_trend_24h"
+    "temp_trend_24h",
 }
 
 _XGB_PARAMS = {

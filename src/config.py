@@ -81,8 +81,7 @@ GOLD_FEATURE_COLS = [
 ]
 
 # ── Model settings ─────────────────────────────────────────────────────────────
-TARGET_COL       = "is_flood"
-DISCHARGE_THRESH = 1.0
+TARGET_COL = "is_flood"
 
 # ── Sensor Boundaries (for DQ Score) ──────────────────────────────────────────
 SENSOR_BOUNDS = {
@@ -103,7 +102,3 @@ MAX_RETRIES    = 3
 BACKOFF_FACTOR = 2
 FORECAST_DAYS  = 15
 MAX_MISSING_PCT = 5.0
-FLOOD_THRESHOLD = 1.0  # m3/s
-MAX_MISSING_PCT = 5.0
-TEMP_RANGE      = (-50.0, 60.0)
-PRECIP_MAX      = 500.0

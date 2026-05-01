@@ -14,14 +14,8 @@ Usage:
 import argparse
 import logging
 import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from src import config, predict
-import ingestion
-import pipeline
-import model as mdl
+from src import config, ingestion, model as mdl, pipeline, predict
 
 logging.basicConfig(
     level=logging.INFO,

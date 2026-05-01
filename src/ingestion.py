@@ -43,7 +43,6 @@ def _make_request(url: str, params: dict) -> dict:
             wait = (config.BACKOFF_FACTOR ** attempt) + random.uniform(0, 1)
             logger.warning(f"Attempt {attempt + 1} failed — retrying in {wait:.1f}s")
             time.sleep(wait)
-    return {}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
