@@ -427,6 +427,7 @@ The API defaults to **demo mode** (`LIVE_MODE=false`), replaying stored predicti
 | Sampling Strategy Comparison (7 strategies)               | Ali | ✅ Done |
 | Optuna Hyperparameter Optimization                        | Ali | ✅ Done |
 | Demo UI (HTML/CSS/JS)                                     | Panahov | ✅ Done |
+| Presentation                                              | Nigar + Ali | ✅ Done |
 
 ---
 
