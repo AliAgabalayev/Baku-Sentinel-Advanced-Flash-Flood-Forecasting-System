@@ -35,7 +35,7 @@
 | Name | Role |
 |------|------|
 | Ali Agabalazade | Lead ML / Data Engineer |
-| Nigar Rustamova | Data Analyst / Geospatial |
+| Nigar Rustamova | Data Scientist / Geospatial |
 | Nazrin Mammadzadeh | Project Manager / Documentation |
 | Isgandar Panahov | Presentation / Documentation |
 
