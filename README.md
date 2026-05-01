@@ -100,7 +100,7 @@ The threshold-based labeling strategy was chosen deliberately over subjective ne
 | **Spatial coverage** | Baku metropolitan area, Azerbaijan |
 | **Zones** | 3 terrain-based micro-zones (see below) |
 | **Gold layer rows** | ~27,600 rows across 3 zones |
-| **Class imbalance** | ~1% flood rate (1:93 imbalance ratio) |
+| **Class imbalance** | ~1% flood rate (1:94 imbalance ratio) |
 | **Storage format** | DuckDB (Bronze/Silver/Gold layers) |
 
 ---
@@ -148,7 +148,7 @@ The **Sentinel Feature Pipeline** transforms raw meteorological and hydrological
 
 | Feature | Source | Description |
 |---------|--------|-------------|
-| `api_7d` | `precipitation` | Antecedent Precipitation Index — exponential decay-weighted 7-day accumulation |
+| `api_7d` | `precipitation` | Antecedent Precipitation Index — exponential decay accumulation over the previous 24 h (current + 3 lag terms at 6 h, 12 h, 24 h; decay factor 0.85 per step) |
 | `soil_saturation_index` | `soil_moisture_*` | Weighted composite across 0–28 cm depth layers |
 | `soil_moisture_change_6h` | `soil_moisture_0_to_7cm` | Rate of soil moisture increase per 6h window |
 | `soil_moisture_deficit` | `soil_moisture_*` | Difference from saturation capacity |
@@ -179,7 +179,7 @@ The **Sentinel Feature Pipeline** transforms raw meteorological and hydrological
 |---------|-------------|
 | `hour_sin`, `hour_cos` | Sine/cosine encoding of hour-of-day (preserves 0h ≡ 24h continuity) |
 | `doy_sin`, `doy_cos` | Sine/cosine encoding of day-of-year (captures seasonal cycles) |
-| `is_winter` | 1 during meteorological winter (Dec–Feb) when frozen-ground dynamics apply |
+| `is_winter` | 1 during meteorological winter (Nov–Feb) when frozen-ground dynamics apply |
 
 ### Base Meteorological Variables (Raw Inputs)
 
@@ -248,7 +248,7 @@ graph TD
 
 **Design Decisions:**
 
-- **Purge-on-Process:** Raw hourly Bronze data is processed into 6-hourly Silver grain and immediately discarded, saving disk space while preserving analytical fidelity.
+- **Purge-on-Process:** Raw hourly Bronze data is processed into 6-hourly Silver grain. The Bronze purge step is implemented in `pipeline.py` but disabled by default (commented out) — enable `DROP SCHEMA bronze CASCADE` for disk-constrained deployments.
 - **Leakage-free labeling:** The `is_flood` target is computed inside the `base` CTE using the *previous day's* discharge so it cannot propagate into lag/rolling features computed by downstream CTEs.
 - **Contextual Continuity:** Lag features (e.g., `precip_lag_48h`) require recent historical context at inference time. The Silver Stream merges live forecast data with the most recent standardized history, ensuring zero feature mismatch between training and production.
 - **Climatological Extension:** `WeatherClimatologyModel` is trained on Silver layer historical data, grouping by zone × day-of-year × hour to build a 6-hourly seasonal profile. It fills days 16–30 of the forecast horizon when live forecast data is unavailable.
@@ -269,10 +269,11 @@ This is intentional and operationally standard. Free-tier NWP forecasts collapse
 | Property | Detail |
 |----------|--------|
 | **Algorithm** | XGBoost (`XGBClassifier`) with isotonic probability calibration (`CalibratedClassifierCV`) |
-| **Training data** | Gold layer — 6+ years of features (2020–2026), 22,099 training rows |
+| **Training data** | Gold layer — 6+ years of features (2020–2026), 22,098 training rows |
 | **Flood base rate** | 1.06% overall (293 events / 27,624 rows) · 1:94 class imbalance |
 | **Validation strategy** | Chronological 80/20 split + `TimeSeriesSplit(n_splits=5)` cross-validation |
-| **Sampling** | RandomOverSampler (50/50 balanced fit set) + `scale_pos_weight` |
+| **Sampling** | `scale_pos_weight` (class-weight balancing inside XGBoost) |
+| **Model features** | 27 of 37 Gold layer columns (10 excluded before training — see `model.py:_DROP_COLS`) |
 | **Hyperparameter search** | Optuna TPE — 60 trials, `TimeSeriesSplit(n_splits=5)` inside each trial |
 | **Optimization objective** | F2-score (recall weighted 4× more than precision) |
 | **Input granularity** | 6-hourly |
@@ -351,6 +352,31 @@ python -m src.main --mode full
 
 Logs are written to `logs/baku_sentinel.log`. Forecast output is saved to `reports/forecast_30day.csv`.
 
+### Demo UI
+
+The interactive dashboard is served by a FastAPI backend (`api.py`) and a React + Vite frontend (`frontend/`).
+
+```bash
+# One-shot launcher (starts both servers)
+bash start.sh
+#   Backend  → http://localhost:8000/docs
+#   Frontend → http://localhost:5173
+
+# Or start individually:
+uvicorn api:app --port 8000 --reload   # FastAPI backend
+cd frontend && npm run dev             # React frontend
+```
+
+**API endpoints:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/forecast` | 30-day 6-hourly flood risk forecast (cached per 6-hour slot) |
+| `GET` | `/api/historical?start=&end=` | Historical predictions from `gold.predictions` |
+| `GET` | `/api/metrics` | Model evaluation metrics from `baku_sentinel_xgb_metrics.json` |
+
+The API defaults to **demo mode** (`LIVE_MODE=false`), replaying stored predictions without triggering a live Open-Meteo fetch. Set `LIVE_MODE=true` in `.env` to run the full live inference pipeline.
+
 ---
 
 ## Key Definitions
@@ -359,7 +385,7 @@ Logs are written to `logs/baku_sentinel.log`. Forecast output is saved to `repor
 |------|------------|
 | **Flash Flood** | Rapid, localised inundation caused by short-duration high-intensity precipitation or cascading terrain runoff, typically occurring within 6 hours of the triggering event |
 | **River Discharge** | Volumetric flow rate of water past a cross-section of a river (unit: m³/s); the primary ground-truth flood proxy used for labeling |
-| **Antecedent Precipitation Index (API-7D)** | An exponential decay-weighted accumulation of rainfall over the preceding 7 days, used as a proxy for current soil moisture memory |
+| **Antecedent Precipitation Index (API-7D)** | An exponential decay-weighted accumulation of rainfall over the preceding 24 hours (current + 3 lag terms at 6 h, 12 h, 24 h; decay factor 0.85), used as a proxy for recent soil moisture memory |
 | **Soil Saturation Index (SSI)** | A weighted composite of volumetric water content across 0–7 cm and 7–28 cm soil depth layers; measures how close the ground is to full saturation |
 | **Terrain Cascade Risk** | A zone-level risk multiplier that quantifies how much upland (High Relief) precipitation is gravitationally channelled toward the lowland (Low Relief) core |
 | **Silver Grain** | The standardised 6-hourly timestep used as the canonical analytical unit throughout the pipeline |
@@ -413,10 +439,16 @@ Weather-Prediction/
 │   ├── raw/                             # Raw CSV downloads (ephemeral)
 │   └── weather.duckdb                   # Bronze / Silver / Gold DuckDB database
 │
+├── frontend/                            # React + Vite demo UI
+│   └── src/
+│       ├── api/                         # client.js — FastAPI integration
+│       ├── components/                  # BakuScene, LeftPanel, RightPanel, TimelineSlider
+│       └── pages/                       # About, Archive, Dashboard
+│
 ├── models/
 │   ├── baku_sentinel_xgb.joblib         # Trained XGBoost + isotonic calibration model
 │   ├── baku_sentinel_xgb_metrics.json   # AUC-ROC, AUC-PR, CV PR-AUC, F1/F2, SHAP top-10
-│   ├── day05_ros_optuna.joblib          # Optuna-tuned ROS model (notebook artefact)
+│   ├── day05_ros_optuna.joblib          # Optuna-tuned ROS model (notebook artefact, gitignored)
 │   └── day05_ros_optuna_metrics.json    # Optuna trial results & metrics
 │
 ├── notebooks/
@@ -445,6 +477,9 @@ Weather-Prediction/
 ├── logs/
 │   └── baku_sentinel.log
 │
+├── api.py                               # FastAPI backend (/api/forecast, /api/historical, /api/metrics)
+├── setup_db.py                          # One-time DuckDB schema initialisation
+├── start.sh                             # Convenience launcher — starts API (port 8000) + frontend (port 5173)
 ├── .gitignore
 ├── README.md
 └── requirements.txt
