@@ -37,7 +37,7 @@
 | Ali Agabalazade | Lead ML / Data Engineer |
 | Nigar Rustamova | Data Scientist / Geospatial |
 | Nazrin Mammadzadeh | Project Manager / Documentation |
-| Isgandar Panahov | Presentation / Documentation |
+| Isgandar Panahov | Frontend Developer / Presentation |
 
 ---
 
